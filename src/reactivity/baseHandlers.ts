@@ -14,13 +14,17 @@ export const createSetter = () => (target: any, key: string | symbol, value: any
 	return res;
 };
 
-export const mutableHandlers = {
-	get: createGetter(),
-	set: createSetter(),
-};
 
+const get = createGetter();
+const set = createSetter();
+const readonlyGet = createGetter(true);
+
+export const mutableHandlers = {
+	get,
+	set,
+};
 export const readonlyHandlers = {
-	get: createGetter(true),
+	get: readonlyGet,
 	set() {
 		return true;
 	},
