@@ -16,3 +16,15 @@ export function reactive(raw) {
 		},
 	});
 }
+
+export function readonly(raw) { 
+	return new Proxy(raw, {
+		get(target, key) {
+			const res = Reflect.get(target, key);
+			return res;
+		},
+		set() {
+			return true	
+		},
+	});
+}
