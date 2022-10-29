@@ -1,6 +1,7 @@
 class ReactiveEffect {
 	private _fn: any; 
 	deps = [];
+	activity = true;
 	constructor(_fn, public scheduler) { 
 		this._fn = _fn;
 	}
@@ -11,8 +12,15 @@ class ReactiveEffect {
 	}
 
 	stop() { 
-		this.deps.forEach((dep:any) => { 
-			dep.delete(this);
+		if (this.activity) {
+			this.cleanupEffect(this);
+			this.activity = false;
+		}
+	}
+
+	private cleanupEffect(effect) {
+		effect.deps.forEach((dep: any) => {
+			dep.delete(effect);
 		});
 	}
 }
