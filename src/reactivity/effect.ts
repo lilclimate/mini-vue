@@ -1,24 +1,37 @@
 import { extend } from "../shared";
 
+let activeEffect;
+let shouldTrack = false;
 class ReactiveEffect {
 	private _fn: any; 
+	active = true;
 	deps = [];
-	activity = true;
 	onStop?: () => void;
 	constructor(_fn, public scheduler) { 
 		this._fn = _fn;
 	}
 
-	run() { 
-		activeEffect = this;
-		return this._fn();
-	}
+	run() {
+    if (!this.active) {
+      return this._fn();
+    }
+
+    // 应该收集
+    shouldTrack = true;
+    activeEffect = this;
+    const r = this._fn();
+
+    // 重置
+    shouldTrack = false;
+
+    return r;
+  }
 
 	stop() { 
-		if (this.activity) {
+		if (this.active) {
 			this.cleanupEffect(this);
 			if (this.onStop) this.onStop();
-			this.activity = false;
+			this.active = false;
 		}
 	}
 
@@ -26,11 +39,13 @@ class ReactiveEffect {
 		effect.deps.forEach((dep: any) => {
 			dep.delete(effect);
 		});
+		effect.deps.length = 0;
 	}
 }
 
 const targetMap = new Map();
 export function track(target, key) { 
+	if (!isTracking()) return;
 	let depsMap = targetMap.get(target);
 	if (!depsMap) { 
 		depsMap = new Map();
@@ -42,10 +57,16 @@ export function track(target, key) {
 		dep = new Set();
 		depsMap.set(key, dep);
 	}
-	if (!activeEffect) return;
+	// if (!activeEffect) return;
+
+	// if (!shouldTrack) return;
 
 	dep.add(activeEffect);
 	activeEffect.deps.push(dep);
+}
+
+export function isTracking() { 
+	return shouldTrack && activeEffect !== undefined;
 }
 
 export function trigger(target, key) {
@@ -61,7 +82,6 @@ export function trigger(target, key) {
 	}
 }
 
-let activeEffect;
 export function effect(fn, options: any = {}) { 
 	const _effect = new ReactiveEffect(fn, options.scheduler);
 	extend(_effect, options);
