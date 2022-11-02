@@ -1,6 +1,6 @@
 import { extend, isObject } from "../shared";
 import { track, trigger } from "./effect";
-import {  reactive, ReactiveFlags, readonly, shallowReadonly } from "./reactive";
+import {  reactive, ReactiveFlags, readonly } from "./reactive";
 
 export const createGetter = (isReadOnly = false ,shallow = false) => (target: any, key: string | symbol) => {
 	const res = Reflect.get(target, key);
